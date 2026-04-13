@@ -1,22 +1,16 @@
 {
-  "name": "smarthealthreminder",
-  "version": "1.0.0",
-  "main": "index.ts",
+  "name": "smart-health-reminder",
+  "private": true,
+  "workspaces": ["apps/frontend", "apps/backend"],
   "scripts": {
-    "start": "expo start",
-    "android": "expo start --android",
-    "ios": "expo start --ios",
-    "web": "expo start --web"
-  },
-  "dependencies": {
-    "expo": "~54.0.33",
-    "expo-status-bar": "~3.0.9",
-    "react": "19.1.0",
-    "react-native": "0.81.5"
-  },
-  "devDependencies": {
-    "@types/react": "~19.1.0",
-    "typescript": "~5.9.2"
-  },
-  "private": true
+    "frontend:start": "npm --workspace @smart-health/frontend run start",
+    "frontend:android": "npm --workspace @smart-health/frontend run android",
+    "frontend:ios": "npm --workspace @smart-health/frontend run ios",
+    "frontend:web": "npm --workspace @smart-health/frontend run web",
+    "frontend:typecheck": "npm --workspace @smart-health/frontend run typecheck",
+    "backend:typecheck": "npm --workspace @smart-health/backend run typecheck",
+    "backend:test:domain": "npm --workspace @smart-health/backend run test:domain",
+    "backend:test:persistence": "npm --workspace @smart-health/backend run test:persistence",
+    "typecheck": "npm run frontend:typecheck && npm run backend:typecheck"
+  }
 }
