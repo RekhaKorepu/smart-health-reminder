@@ -69,9 +69,9 @@ function isTime24h(value: unknown): value is string {
 }
 
 function isTimezone(value: unknown): value is string {
+  // Allow common single-word zones like UTC, GMT, or standard IANA 'Region/City'
   return (
     isNonEmptyString(value) &&
-    value.includes("/") &&
     value.length >= 3 &&
     value.length <= 64
   );

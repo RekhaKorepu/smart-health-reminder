@@ -1,17 +1,18 @@
 import { MongoClient } from "mongodb";
+import * as dotenv from "dotenv";
+
+dotenv.config();
 
 const uri = process.env.MONGO_URI;
-if (!uri) {
-  throw new Error("MONGO_URI is not set. Please check your .env file.");
-}
+if (!uri) throw new Error("MONGO_URI is not set.");
 
-export const mongoClient = new MongoClient(uri);
+let connected = false;
+export const client = new MongoClient(uri);
 
-export async function connectClient(): Promise<MongoClient> {
-  await mongoClient.connect();
-  return mongoClient;
-}
-
-export async function closeClient(): Promise<void> {
-  await mongoClient.close();
+export async function getDb() {
+  if (!connected) {
+    await client.connect();
+    connected = true;
+  }
+  return client.db(process.env.DB_NAME ?? "smart_health");
 }

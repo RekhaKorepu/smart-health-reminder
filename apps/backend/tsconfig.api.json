@@ -5,10 +5,10 @@
     "moduleResolution": "node",
     "target": "es2020",
     "lib": ["es2020"],
-    "types": ["node"],
     "esModuleInterop": true,
     "skipLibCheck": true,
-    "noEmit": true
+    "outDir": ".tmp/api",
+    "rootDir": "."
   },
-  "include": ["src/**/*.ts", "tests/**/*.ts"]
+  "include": ["src/**/*.ts"]
 }

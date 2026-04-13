@@ -3,16 +3,25 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
+    "dev": "tsc -p tsconfig.api.json && node --env-file=.env .tmp/api/src/api/server.js",
     "typecheck": "tsc -p tsconfig.phase1.json --noEmit",
     "test:domain": "tsc -p tsconfig.domain.json && node --test .tmp/domain-tests/tests/domain/*.test.js",
     "test:persistence": "tsc -p tsconfig.phase1.json && node --test .tmp/phase1-tests/tests/persistence/persistence.spec.test.js",
     "test:integration": "tsc -p tsconfig.integration.json && node --env-file=.env --test .tmp/integration-tests/tests/integration/db.integration.test.js"
   },
   "devDependencies": {
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.6",
+    "@types/uuid": "^10.0.0",
     "typescript": "~5.9.2"
   },
   "dependencies": {
+    "cors": "^2.8.6",
+    "date-fns": "^4.1.0",
+    "date-fns-tz": "^3.2.0",
     "dotenv": "^17.4.2",
-    "mongodb": "^7.1.1"
+    "express": "^5.2.1",
+    "mongodb": "^7.1.1",
+    "uuid": "^13.0.0"
   }
 }
