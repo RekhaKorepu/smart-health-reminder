@@ -1,0 +1,13 @@
+{
+  "name": "@smart-health/backend",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.phase1.json --noEmit",
+    "test:domain": "tsc -p tsconfig.domain.json && node --test .tmp/domain-tests/tests/domain/*.test.js",
+    "test:persistence": "tsc -p tsconfig.phase1.json && node --test .tmp/phase1-tests/tests/persistence/persistence.spec.test.js"
+  },
+  "devDependencies": {
+    "typescript": "~5.9.2"
+  }
+}
