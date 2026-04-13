@@ -5,9 +5,14 @@
   "scripts": {
     "typecheck": "tsc -p tsconfig.phase1.json --noEmit",
     "test:domain": "tsc -p tsconfig.domain.json && node --test .tmp/domain-tests/tests/domain/*.test.js",
-    "test:persistence": "tsc -p tsconfig.phase1.json && node --test .tmp/phase1-tests/tests/persistence/persistence.spec.test.js"
+    "test:persistence": "tsc -p tsconfig.phase1.json && node --test .tmp/phase1-tests/tests/persistence/persistence.spec.test.js",
+    "test:integration": "tsc -p tsconfig.integration.json && node --env-file=.env --test .tmp/integration-tests/tests/integration/db.integration.test.js"
   },
   "devDependencies": {
     "typescript": "~5.9.2"
+  },
+  "dependencies": {
+    "dotenv": "^17.4.2",
+    "mongodb": "^7.1.1"
   }
 }
