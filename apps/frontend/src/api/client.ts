@@ -1,7 +1,23 @@
-// API client for Smart Health Reminder backend
-// Base URL: localhost for iOS simulator; change to 10.0.2.2 for Android emulator
+import Constants from "expo-constants";
 
-const BASE_URL = "http://localhost:3000";
+// API client for Smart Health Reminder backend
+// Dynamically resolve backend IP for development (Expo Go / Emulators)
+const getBaseUrl = () => {
+  if (__DEV__) {
+    // Look for the hostUri (e.g. "192.168.1.5:8081")
+    const hostUri = Constants.expoConfig?.hostUri;
+    if (hostUri) {
+      const ip = hostUri.split(":")[0];
+      return `http://${ip}:3000`;
+    }
+    // Fallback for Android emulator
+    return "http://10.0.2.2:3000";
+  }
+  // Production URL (Phase 6)
+  return "https://api.smarthealthreminder.com";
+};
+
+const BASE_URL = getBaseUrl();
 const USER_ID = "user-demo-001"; // Placeholder until auth is implemented (Phase 5)
 
 async function apiFetch<T>(
@@ -19,9 +35,11 @@ async function apiFetch<T>(
 
   if (!response.ok) {
     const body = await response.json().catch(() => ({}));
-    throw Object.assign(new Error(body.message ?? "Request failed"), {
+    const error = new Error(body.message ?? "Request failed");
+    throw Object.assign(error, {
       status: response.status,
       body,
+      issues: body.issues as Array<{ field: string; message: string }> | undefined,
     });
   }
 

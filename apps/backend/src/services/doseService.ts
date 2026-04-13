@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
 import type { Db } from "mongodb";
+import { formatInTimeZone, fromZonedTime } from "date-fns-tz";
 import type { MedicationSchedule, ReminderEvent } from "../domain/models";
 import { validateMedicationSchedule } from "../domain/validation";
 import { transitionReminderStatus, shouldMarkReminderMissed } from "../domain/lifecycle";
@@ -109,7 +110,7 @@ export async function deactivateSchedule(db: Db, scheduleId: string, userId: str
  */
 export async function generateTodayDoseEvents(db: Db, userId: string): Promise<ReminderEvent[]> {
   const now = new Date();
-  const todayISO = now.toISOString().slice(0, 10); // YYYY-MM-DD
+  const todayISO = now.toISOString().slice(0, 10); // YYYY-MM-DD (UTC date, used for event naming)
 
   const schedules = await db
     .collection("medication_schedules")
@@ -139,7 +140,19 @@ export async function generateTodayDoseEvents(db: Db, userId: string): Promise<R
         ? parseInt(schedule.customTime24h.split(":")[0], 10)
         : (timeSlotHours[schedule.timeSlot] ?? 8);
 
-    const dueDate = new Date(`${todayISO}T${String(hour).padStart(2, "0")}:00:00.000Z`);
+    const minute =
+      schedule.timeSlot === "CUSTOM" && schedule.customTime24h
+        ? parseInt(schedule.customTime24h.split(":")[1], 10)
+        : 0;
+
+    // 1. Get today's local date part in the user's specific timezone
+    const datePart = formatInTimeZone(now, schedule.timezone, "yyyy-MM-dd");
+    
+    // 2. Construct the local time string ("YYYY-MM-DD HH:mm:ss")
+    const localTimeStr = `${datePart} ${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}:00`;
+    
+    // 3. Convert that local time in the specific timezone to a UTC Date object
+    const dueDate = fromZonedTime(localTimeStr, schedule.timezone);
 
     // Deterministic event_id for today's dose (date + schedule)
     const eventId = `dose-${schedule.id}-${todayISO}`;

@@ -1,18 +1,21 @@
-import { Router } from "express";
+import { Router, Request } from "express";
 import { getDb } from "../../db/client";
 import { createSchedule, listSchedules, deactivateSchedule } from "../../services/doseService";
 
 export const scheduleRouter = Router();
 
+function uid(req: Request): string {
+  return String(req.headers["x-user-id"] ?? "anonymous");
+}
+
 // POST /medications/:medicationId/schedules
 scheduleRouter.post("/:medicationId/schedules", async (req, res) => {
   try {
     const db = await getDb();
-    const userId = (req.headers["x-user-id"] as string) ?? "anonymous";
     const schedule = await createSchedule(db, {
       ...req.body,
       medicationId: req.params.medicationId,
-      userId,
+      userId: uid(req),
     });
     res.status(201).json(schedule);
   } catch (err: unknown) {
@@ -29,8 +32,7 @@ scheduleRouter.post("/:medicationId/schedules", async (req, res) => {
 scheduleRouter.get("/:medicationId/schedules", async (req, res) => {
   try {
     const db = await getDb();
-    const userId = (req.headers["x-user-id"] as string) ?? "anonymous";
-    const schedules = await listSchedules(db, req.params.medicationId, userId);
+    const schedules = await listSchedules(db, req.params.medicationId, uid(req));
     res.json(schedules);
   } catch (err: unknown) {
     res.status(500).json({ error: "INTERNAL_ERROR", message: (err as Error).message });
@@ -41,8 +43,7 @@ scheduleRouter.get("/:medicationId/schedules", async (req, res) => {
 scheduleRouter.delete("/:medicationId/schedules/:scheduleId", async (req, res) => {
   try {
     const db = await getDb();
-    const userId = (req.headers["x-user-id"] as string) ?? "anonymous";
-    const deleted = await deactivateSchedule(db, req.params.scheduleId, userId);
+    const deleted = await deactivateSchedule(db, req.params.scheduleId, uid(req));
     if (!deleted) {
       res.status(404).json({ error: "NOT_FOUND", message: "Schedule not found." });
       return;

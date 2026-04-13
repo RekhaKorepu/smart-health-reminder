@@ -1,4 +1,4 @@
-import { Router } from "express";
+import { Router, Request } from "express";
 import { getDb } from "../../db/client";
 import {
   generateTodayDoseEvents,
@@ -9,11 +9,15 @@ import {
 
 export const doseRouter = Router();
 
+function uid(req: Request): string {
+  return String(req.headers["x-user-id"] ?? "anonymous");
+}
+
 // GET /doses — list today's dose events for user (auto-generates if needed)
 doseRouter.get("/", async (req, res) => {
   try {
     const db = await getDb();
-    const userId = (req.headers["x-user-id"] as string) ?? "anonymous";
+    const userId = uid(req);
 
     // Auto-mark missed events
     await markMissedDoseEvents(db, userId);
@@ -32,8 +36,7 @@ doseRouter.get("/", async (req, res) => {
 doseRouter.post("/:eventId/confirm", async (req, res) => {
   try {
     const db = await getDb();
-    const userId = (req.headers["x-user-id"] as string) ?? "anonymous";
-    const result = await applyDoseAction(db, req.params.eventId, userId, "CONFIRM", req.body.source);
+    const result = await applyDoseAction(db, req.params.eventId, uid(req), "CONFIRM", req.body.source);
     if (!result.ok) {
       res.status(409).json({ error: "TRANSITION_ERROR", message: result.reason });
       return;
@@ -48,8 +51,7 @@ doseRouter.post("/:eventId/confirm", async (req, res) => {
 doseRouter.post("/:eventId/snooze", async (req, res) => {
   try {
     const db = await getDb();
-    const userId = (req.headers["x-user-id"] as string) ?? "anonymous";
-    const result = await applyDoseAction(db, req.params.eventId, userId, "SNOOZE", req.body.source);
+    const result = await applyDoseAction(db, req.params.eventId, uid(req), "SNOOZE", req.body.source);
     if (!result.ok) {
       res.status(409).json({ error: "TRANSITION_ERROR", message: result.reason });
       return;
@@ -64,8 +66,7 @@ doseRouter.post("/:eventId/snooze", async (req, res) => {
 doseRouter.post("/:eventId/skip", async (req, res) => {
   try {
     const db = await getDb();
-    const userId = (req.headers["x-user-id"] as string) ?? "anonymous";
-    const result = await applyDoseAction(db, req.params.eventId, userId, "SKIP", req.body.source);
+    const result = await applyDoseAction(db, req.params.eventId, uid(req), "SKIP", req.body.source);
     if (!result.ok) {
       res.status(409).json({ error: "TRANSITION_ERROR", message: result.reason });
       return;

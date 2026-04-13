@@ -188,14 +188,22 @@ export function AddMedicationScreen() {
     setWeekdays((prev) => (prev.includes(day) ? prev.filter((d) => d !== day) : [...prev, day]));
 
   const handleSave = async () => {
+    if (!canStep1) {
+      Alert.alert("Missing Information", "Please enter the medication name and dosage.");
+      setStep(1);
+      return;
+    }
+
     setSaving(true);
     try {
+      const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
+      
       const med = await medicationApi.create({
-        name,
-        dosageText,
-        instructions: instructions || undefined,
+        name: name.trim(),
+        dosageText: dosageText.trim(),
+        instructions: instructions.trim() || undefined,
         startDate: new Date().toISOString().slice(0, 10),
-        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+        timezone: tz,
         stockCount: stockCount ? parseInt(stockCount, 10) : undefined,
         refillThreshold: refillThreshold ? parseInt(refillThreshold, 10) : undefined,
       });
@@ -204,14 +212,23 @@ export function AddMedicationScreen() {
         scheduleType,
         timeSlot,
         weekdays: scheduleType === "WEEKLY" ? weekdays : undefined,
-        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+        timezone: tz,
       });
 
       Alert.alert("✅ Medication Added", `${name} has been added to your schedule.`, [
         { text: "OK", onPress: () => navigation.goBack() },
       ]);
-    } catch (err) {
-      Alert.alert("Error", "Failed to save medication. Please try again.");
+    } catch (err: any) {
+      console.error("Save failed:", err);
+      
+      let errorMsg = "Failed to save medication. Please try again.";
+      if (err.issues && Array.isArray(err.issues)) {
+        errorMsg = err.issues.map((i: any) => `${i.field}: ${i.message}`).join("\n");
+      } else if (err.message) {
+        errorMsg = err.message;
+      }
+      
+      Alert.alert("Saving Failed", errorMsg);
     } finally {
       setSaving(false);
     }

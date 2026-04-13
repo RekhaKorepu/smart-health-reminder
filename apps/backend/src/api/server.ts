@@ -31,7 +31,19 @@ app.use((_req, res) => {
   res.status(404).json({ error: "NOT_FOUND", message: "Route not found." });
 });
 
+import os from "node:os";
+
 const PORT = process.env.PORT ?? 3000;
+
+function getLocalIp() {
+  const nets = os.networkInterfaces();
+  for (const name of Object.keys(nets)) {
+    for (const net of nets[name]!) {
+      if (net.family === "IPv4" && !net.internal) return net.address;
+    }
+  }
+  return "localhost";
+}
 
 async function start() {
   const db = await getDb();
@@ -41,8 +53,11 @@ async function start() {
   await applyBootstrap(db);
   console.log("✅  Indexes bootstrapped.");
 
-  app.listen(PORT, () => {
-    console.log(`🚀  API server running on http://localhost:${PORT}`);
+  app.listen(Number(PORT), "0.0.0.0", () => {
+    const localIp = getLocalIp();
+    console.log(`🚀  API server running on:`);
+    console.log(`    - Local:   http://localhost:${PORT}`);
+    console.log(`    - Network: http://${localIp}:${PORT}`);
   });
 }
 
