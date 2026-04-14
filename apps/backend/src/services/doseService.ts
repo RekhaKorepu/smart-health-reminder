@@ -337,9 +337,15 @@ export async function getMedicationAdherence(
 }
 
 export async function getTodayDoseEvents(db: Db, userId: string): Promise<Array<Record<string, unknown>>> {
-  const todayISO = new Date().toISOString().slice(0, 10);
-  const startOfDay = `${todayISO}T00:00:00.000Z`;
-  const endOfDay = `${todayISO}T23:59:59.999Z`;
+  // 1. Find user's timezone from their first active schedule (default to UTC)
+  const firstSchedule = await db.collection("medication_schedules").findOne({ user_id: userId, is_active: true });
+  const tz = firstSchedule ? String(firstSchedule.timezone) : "UTC";
+
+  // 2. Calculate local boundaries in UTC
+  const now = new Date();
+  const dateStr = formatInTimeZone(now, tz, "yyyy-MM-dd");
+  const startOfDay = fromZonedTime(`${dateStr} 00:00:00`, tz).toISOString();
+  const endOfDay = fromZonedTime(`${dateStr} 23:59:59`, tz).toISOString();
 
   const events = await db
     .collection("reminder_events")

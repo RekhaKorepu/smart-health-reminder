@@ -226,14 +226,25 @@ export async function generateTodayEvents(db: Db, userId: string): Promise<Array
 export async function getTodayHydrationEvents(db: Db, userId: string): Promise<Array<Record<string, unknown>>> {
   await generateTodayEvents(db, userId);
 
-  const todayISO = new Date().toISOString().slice(0, 10);
-  const startOfDay = `${todayISO}T00:00:00.000Z`;
-  const endOfDay = `${todayISO}T23:59:59.999Z`;
+  const plan = await getPlan(db, userId);
+  const tz = plan?.timezone ?? "UTC";
+  const now = new Date();
+  const dateStr = formatInTimeZone(now, tz, "yyyy-MM-dd");
+  const startOfDay = fromZonedTime(`${dateStr} 00:00:00`, tz).toISOString();
+  const endOfDay = fromZonedTime(`${dateStr} 23:59:59`, tz).toISOString();
 
-  return db.collection("reminder_events")
+  const events = await db.collection("reminder_events")
     .find({ user_id: userId, path: "HYDRATION", due_at_utc: { $gte: startOfDay, $lte: endOfDay } })
     .sort({ due_at_utc: 1 })
-    .toArray() as Promise<Array<Record<string, unknown>>>;
+    .toArray();
+
+  return events.map(e => ({
+    eventId: e.event_id,
+    eventType: e.event_type,
+    status: e.status,
+    dueAtUtc: e.due_at_utc,
+    timezone: e.timezone,
+  }));
 }
 
 // ─── Intake logging (FR-HYD-004) ─────────────────────────────────────────────
@@ -262,11 +273,12 @@ export async function logIntake(db: Db, input: LogIntakeInput): Promise<Hydratio
 export async function getTodaySummary(db: Db, userId: string): Promise<HydrationSummary> {
   const plan = await getPlan(db, userId);
   const goalMl = plan?.dailyGoalMl ?? 2000;
+  const tz = plan?.timezone ?? "UTC";
 
-  // Boundary: start & end of today in UTC (simple, Phase 3 simplification)
-  const todayISO = new Date().toISOString().slice(0, 10);
-  const startOfDay = `${todayISO}T00:00:00.000Z`;
-  const endOfDay = `${todayISO}T23:59:59.999Z`;
+  const now = new Date();
+  const dateStr = formatInTimeZone(now, tz, "yyyy-MM-dd");
+  const startOfDay = fromZonedTime(`${dateStr} 00:00:00`, tz).toISOString();
+  const endOfDay = fromZonedTime(`${dateStr} 23:59:59`, tz).toISOString();
 
   const logs = await db.collection("hydration_intake_logs")
     .find({ user_id: userId, logged_at_utc: { $gte: startOfDay, $lte: endOfDay } })
