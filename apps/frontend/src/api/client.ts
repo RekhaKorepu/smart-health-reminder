@@ -198,10 +198,10 @@ export interface HydrationAdherenceDay {
 }
 
 export interface HydrationEvent {
-  event_id: string;
-  event_type: string;
+  eventId: string;
+  eventType: string;
   status: "PENDING" | "SENT" | "ACKED" | "SNOOZED" | "SKIPPED" | "MISSED";
-  due_at_utc: string;
+  dueAtUtc: string;
   timezone: string;
 }
 
