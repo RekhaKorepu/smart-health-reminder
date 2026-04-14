@@ -10,6 +10,8 @@ import { MedicationsScreen } from "../screens/MedicationsScreen";
 import { MedicationDetailScreen } from "../screens/MedicationDetailScreen";
 import { AddMedicationScreen } from "../screens/AddMedicationScreen";
 import { AdherenceScreen } from "../screens/AdherenceScreen";
+import { HydrationScreen } from "../screens/HydrationScreen";
+import { HydrationSetupScreen } from "../screens/HydrationSetupScreen";
 
 // ─── Stack param types ────────────────────────────────────────────────────────
 
@@ -19,12 +21,18 @@ export type MedicationStackParamList = {
   AddMedication: undefined;
 };
 
+export type HydrationStackParamList = {
+  HydrationMain: undefined;
+  HydrationSetup: undefined;
+};
+
 const Tab = createBottomTabNavigator();
 const MedStack = createNativeStackNavigator<MedicationStackParamList>();
+const HydStack = createNativeStackNavigator<HydrationStackParamList>();
 
 // ─── Tab icon component ───────────────────────────────────────────────────────
 
-function TabIcon({ emoji, label, focused }: { emoji: string; label: string; focused: boolean }) {
+function TabIcon({ emoji }: { emoji: string; label: string; focused: boolean }) {
   return (
     <View style={{ alignItems: "center", gap: 2 }}>
       <Text style={{ fontSize: 22 }}>{emoji}</Text>
@@ -61,6 +69,33 @@ function MedicationStack() {
         options={{ title: "Add Medication", presentation: "modal" }}
       />
     </MedStack.Navigator>
+  );
+}
+
+// ─── Hydration stack ──────────────────────────────────────────────────────────
+
+function HydrationStack() {
+  return (
+    <HydStack.Navigator
+      screenOptions={{
+        headerStyle: { backgroundColor: Colors.bg },
+        headerTintColor: Colors.textPrimary,
+        headerTitleStyle: { fontWeight: FontWeight.semibold, fontSize: FontSize.md },
+        headerShadowVisible: false,
+        contentStyle: { backgroundColor: Colors.bg },
+      }}
+    >
+      <HydStack.Screen
+        name="HydrationMain"
+        component={HydrationScreen}
+        options={{ headerShown: false }}
+      />
+      <HydStack.Screen
+        name="HydrationSetup"
+        component={HydrationSetupScreen}
+        options={{ title: "Hydration Setup", presentation: "modal" }}
+      />
+    </HydStack.Navigator>
   );
 }
 
@@ -108,6 +143,16 @@ export function AppNavigator() {
             title: "Medications",
             headerShown: false,
             tabBarIcon: ({ focused }) => <TabIcon emoji="💊" label="Medications" focused={focused} />,
+          }}
+        />
+        <Tab.Screen
+          name="Hydration"
+          component={HydrationStack}
+          options={{
+            title: "Hydration",
+            headerShown: false,
+            tabBarActiveTintColor: Colors.teal,
+            tabBarIcon: ({ focused }) => <TabIcon emoji="💧" label="Hydration" focused={focused} />,
           }}
         />
         <Tab.Screen
