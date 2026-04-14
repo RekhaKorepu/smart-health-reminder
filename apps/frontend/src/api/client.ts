@@ -159,3 +159,61 @@ export const adherenceApi = {
   medication: (days = 7) =>
     apiFetch<AdherenceStats[]>(`/adherence/medication?days=${days}`),
 };
+
+// ─── Hydration Types ──────────────────────────────────────────────────────────
+
+export interface HydrationPlan {
+  id: string;
+  userId: string;
+  dailyGoalMl: number;
+  intervalMinutes: number;
+  startTime24h: string;
+  endTime24h: string;
+  timezone: string;
+  isActive: boolean;
+  createdAtUtc: string;
+  updatedAtUtc: string;
+}
+
+export interface HydrationSummary {
+  totalAmountMl: number;
+  goalMl: number;
+  percentage: number;
+  isGoalAchieved: boolean;
+  recentLogs: Array<{ id: string; amountMl: number; time: string }>;
+}
+
+export interface HydrationLog {
+  id: string;
+  amountMl: number;
+  loggedAtUtc: string;
+  source: "MANUAL" | "REMINDER_ACTION";
+}
+
+export interface HydrationAdherenceDay {
+  date: string;
+  totalAmountMl: number;
+  goalMl: number;
+  isSuccess: boolean;
+}
+
+export interface HydrationEvent {
+  eventId: string;
+  eventType: string;
+  status: "PENDING" | "SENT" | "ACKED" | "SNOOZED" | "SKIPPED" | "MISSED";
+  dueAtUtc: string;
+  timezone: string;
+}
+
+// ─── Hydration API ────────────────────────────────────────────────────────────
+
+export const hydrationApi = {
+  getPlan: () => apiFetch<HydrationPlan>("/hydration/plan"),
+  savePlan: (body: Omit<HydrationPlan, "id" | "userId" | "isActive" | "createdAtUtc" | "updatedAtUtc">) =>
+    apiFetch<HydrationPlan>("/hydration/plan", { method: "POST", body: JSON.stringify(body) }),
+  todaySummary: () => apiFetch<HydrationSummary>("/hydration/today"),
+  todayEvents: () => apiFetch<HydrationEvent[]>("/hydration/events/today"),
+  logIntake: (amountMl: number, source: "MANUAL" | "REMINDER_ACTION" = "MANUAL") =>
+    apiFetch<HydrationLog>("/hydration/log", { method: "POST", body: JSON.stringify({ amountMl, source }) }),
+  adherence: (days = 7) => apiFetch<HydrationAdherenceDay[]>(`/hydration/adherence?days=${days}`),
+};

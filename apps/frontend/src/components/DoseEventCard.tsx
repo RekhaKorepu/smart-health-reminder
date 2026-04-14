@@ -1,7 +1,7 @@
 import React from "react";
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import { Colors, Spacing, Radius, FontSize, FontWeight } from "../theme";
-import type { DoseEvent } from "../api/client";
+import type { DoseEvent, HydrationEvent } from "../api/client";
 
 const STATUS_CONFIG: Record<
   DoseEvent["status"],
@@ -15,39 +15,53 @@ const STATUS_CONFIG: Record<
   MISSED: { label: "Missed", color: Colors.danger, bg: Colors.dangerLight, icon: "❗" },
 };
 
+import { parseISO, format } from "date-fns";
+
 function formatTime(utcString: string): string {
-  const d = new Date(utcString);
-  return d.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", hour12: true });
+  try {
+    if (!utcString) return "--:--";
+    const d = parseISO(utcString);
+    return format(d, "hh:mm aa");
+  } catch {
+    return "--:--";
+  }
 }
 
 interface Props {
-  dose: DoseEvent;
-  onAction?: (dose: DoseEvent) => void;
+  event: DoseEvent | HydrationEvent;
+  onAction?: (event: any) => void;
 }
 
-export function DoseEventCard({ dose, onAction }: Props) {
-  const cfg = STATUS_CONFIG[dose.status];
-  const isPending = dose.status === "PENDING" || dose.status === "SENT" || dose.status === "SNOOZED";
+export function DoseEventCard({ event, onAction }: Props) {
+  const isHydration = event.eventType === "HYDRATION_DUE";
+  const cfg = STATUS_CONFIG[event.status];
+  const isPending = event.status === "PENDING" || event.status === "SENT" || event.status === "SNOOZED";
+
+  const medEvent = !isHydration ? (event as DoseEvent) : null;
+  const accentColor = isHydration ? Colors.teal : Colors.accent;
 
   return (
     <TouchableOpacity
-      onPress={() => isPending && onAction?.(dose)}
+      onPress={() => isPending && onAction?.(event)}
       activeOpacity={isPending ? 0.75 : 1}
-      style={[styles.card, isPending && styles.cardActive]}
+      style={[
+        styles.card,
+        isPending && (isHydration ? styles.cardActiveHydration : styles.cardActiveMedication)
+      ]}
       accessibilityRole="button"
-      accessibilityLabel={`${dose.medicationName ?? "Medication"} due at ${formatTime(dose.dueAtUtc)}, status ${cfg.label}`}
+      accessibilityLabel={`${isHydration ? "Water Intake" : (medEvent?.medicationName ?? "Medication")} due at ${formatTime(event.dueAtUtc)}, status ${cfg.label}`}
     >
       {/* Time column */}
       <View style={styles.timeCol}>
-        <Text style={styles.time}>{formatTime(dose.dueAtUtc)}</Text>
-        <View style={[styles.dot, { backgroundColor: cfg.color }]} />
+        <Text style={styles.time}>{formatTime(event.dueAtUtc)}</Text>
+        <View style={[styles.dot, { backgroundColor: isHydration ? Colors.teal : cfg.color }]} />
       </View>
 
       {/* Content */}
       <View style={styles.content}>
         <View style={styles.row}>
           <Text style={styles.medName} numberOfLines={1}>
-            {dose.medicationName ?? "Medication"}
+            {isHydration ? "💧 Water Intake" : (medEvent?.medicationName ?? "Medication")}
           </Text>
           <View style={[styles.statusBadge, { backgroundColor: cfg.bg }]}>
             <Text style={[styles.statusText, { color: cfg.color }]}>
@@ -55,11 +69,16 @@ export function DoseEventCard({ dose, onAction }: Props) {
             </Text>
           </View>
         </View>
-        {dose.dosageText ? (
-          <Text style={styles.dosage}>{dose.dosageText}</Text>
+        {!isHydration && medEvent?.dosageText ? (
+          <Text style={styles.dosage}>{medEvent.dosageText}</Text>
         ) : null}
+        {isHydration && (
+          <Text style={styles.dosage}>Scheduled hydration goal reminder</Text>
+        )}
         {isPending && (
-          <Text style={styles.tapHint}>Tap to confirm or snooze</Text>
+          <Text style={[styles.tapHint, { color: accentColor }]}>
+            {isHydration ? "Tap to log water" : "Tap to confirm or snooze"}
+          </Text>
         )}
       </View>
     </TouchableOpacity>
@@ -76,12 +95,15 @@ const styles = StyleSheet.create({
     padding: Spacing.base,
     marginBottom: Spacing.sm,
   },
-  cardActive: {
+  cardActiveMedication: {
     borderColor: Colors.accentMid,
+  },
+  cardActiveHydration: {
+    borderColor: Colors.teal + "66",
   },
   timeCol: {
     alignItems: "center",
-    width: 52,
+    width: 60,
     marginRight: Spacing.md,
   },
   time: {
@@ -127,7 +149,6 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   tapHint: {
-    color: Colors.accent,
     fontSize: FontSize.xs,
     fontWeight: FontWeight.medium,
   },

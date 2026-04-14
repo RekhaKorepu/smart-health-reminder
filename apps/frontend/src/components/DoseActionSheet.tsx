@@ -11,6 +11,7 @@ import {
 } from "react-native";
 import { Colors, Spacing, Radius, FontSize, FontWeight, Shadow, TouchTarget } from "../theme";
 import type { DoseEvent } from "../api/client";
+import { parseISO, format } from "date-fns";
 
 interface Props {
   dose: DoseEvent | null;
@@ -52,12 +53,13 @@ export function DoseActionSheet({
 
   if (!dose) return null;
 
-  function formatTime(utcString: string) {
-    return new Date(utcString).toLocaleTimeString("en-IN", {
-      hour: "2-digit",
-      minute: "2-digit",
-      hour12: true,
-    });
+  function formatTime(utcString: string): string {
+    try {
+      if (!utcString) return "--:--";
+      return format(parseISO(utcString), "hh:mm aa");
+    } catch {
+      return "--:--";
+    }
   }
 
   return (

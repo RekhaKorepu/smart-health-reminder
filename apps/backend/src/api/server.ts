@@ -7,6 +7,7 @@ import { medicationRouter } from "./routes/medications";
 import { scheduleRouter } from "./routes/schedules";
 import { doseRouter } from "./routes/doses";
 import { adherenceRouter } from "./routes/adherence";
+import { hydrationRouter } from "./routes/hydration";
 
 dotenv.config();
 
@@ -25,6 +26,7 @@ app.use("/medications", medicationRouter);
 app.use("/medications", scheduleRouter);
 app.use("/doses", doseRouter);
 app.use("/adherence", adherenceRouter);
+app.use("/hydration", hydrationRouter);
 
 // 404
 app.use((_req, res) => {

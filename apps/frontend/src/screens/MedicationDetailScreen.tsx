@@ -228,7 +228,7 @@ export function MedicationDetailScreen() {
           todayDoses.map((d) => (
             <DoseEventCard
               key={d.eventId}
-              dose={d}
+              event={d}
               onAction={setSelectedDose}
             />
           ))
